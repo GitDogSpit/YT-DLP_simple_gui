@@ -5,17 +5,24 @@ import yt_dlp as yt
 import json
 
 class FormatInfo:
-    '''We need to store all the information for each format that we read in...'''
-    def __init__(self, format_id, resolution=None, fps=None, codec=None):
+    '''Store all the information for each format that we read in...'''
+    def __init__(self, format_id):
         self.format_id = format_id
-        self.resolution = resolution
-        self.fps = fps
-        self.codec = codec
+        self.TypeOfMedia = None
+        self.Extension = None
+        self.Channels = None
+        self.FileSize = None
+        self.BitRate = None
+        self.Protocol = None
+        self.Codec = None
+        self.AudioSampleRate = None
+        self.Resolution = None
+        self.FPS = None
+        print(f"New Instance: {self.format_id}")
 
-    def __repr__(self):
-        return (f"FormatInfo(format_id='{self.format_id}', "
-                f"resolution='{self.resolution}', fps={self.fps}, codec='{self.codec}')")
-
+    def DisplayInformation(self):
+        print(f'My ID is: {self.format_id}')
+        print(f'My Resolution is: {self.Resolution}')
 
 class AppLogic:
     def __init__(self):
@@ -83,20 +90,25 @@ class AppLogic:
             for f in formats:
                 output = [f"Format ID: {f['format_id']}"]
 
+                #create format
+                format_info = FormatInfo(format_id=f['format_id'])
+
                 #add attributes only if they exist
                 if 'resolution' in f and f['resolution']:
                     output.append(f"Resolution: {f['resolution']}")
+                    format_info.Resolution = f['resolution'] #append to object
                     if f['resolution'] == 'audio only':
-                        audios.append(f['format_id'])
-                        print(f'{f['format_id']} is audio')
+                        audios.append(format_info)
+                        print(f"{f['format_id']} is audio")
 
                 if 'fps' in f and f['fps']:
                     output.append(f"FPS: {f['fps']}")
+                    format_info.FPS = f['fps'] #append to object
                     if f['fps'] > 0 and f['fps'] < 1:
-                        thumbnails.append(f['format_id'])
+                        thumbnails.append(format_info)
                         print(f"{f['format_id']} is a thumbnail")
                     elif f['fps'] > 1:
-                        videos.append(f['format_id'])
+                        videos.append(format_info)
                         print(f"{f['format_id']} is a video")
                     else:
                         #actually redudant but leave as is.
@@ -116,10 +128,15 @@ class AppLogic:
                 #     output.append(f"Video Bitrate: {f['vbr']}")
                 print(", ".join(output))
 
-            print('Printing POST information')
-            print("Thumbnails:", thumbnails)
-            print("Audios:", audios)
-            print("Videos:", videos)
+            print("Printing POST information")
+            print("Thumbnails:", [t.format_id for t in thumbnails])
+            print("Audios:", [a.format_id for a in audios])
+            print("Videos:", [v.format_id for v in videos])
+
+            print("Object Printing")
+            for video in videos:
+                if video.format_id == '269':
+                    video.DisplayInformation()
 
         except Exception as e:
             print(f"Error: {e}")
