@@ -4,6 +4,64 @@
 import yt_dlp as yt
 import json
 
+class VideoInfo:
+    #seperation of formats
+    thumbnails = []
+    audios = []
+    videos = []
+
+    def __init__(self):
+        pass
+
+    def TotalFormats(self):
+        return (len(self.thumbnails) + len(self.audios) + len(self.videos))
+    
+    def ListVideos(self):
+        for video in self.videos:
+            print(video.format_id, video.Resolution)
+
+    def ListAudios(self):
+        for audio in self.audios:
+            print(audio.format_id, audio.AudioBitrate)
+
+    def ListThumbnails(self):
+        for thumbnail in self.thumbnails:
+            print(thumbnail.format_id, thumbnail.Resolution)
+
+    def ListBestVideos(self):
+        #first we grab the resolution from a given format
+        #if the resolution is the same but the format is different, compare the bitrate
+        #remember the best format_id for each resolution
+
+        bestList = [] #should be: 269, 230, 311, 312
+        currentBestPerRes = self.videos[0].format_id #assumes there is a list
+        currentBestVBR = float(self.videos[0].VideoBitrate) #assumes there is a list
+        tempResolution = self.videos[0].Resolution #assumes there is a list
+
+        for video in self.videos:
+            if video.Resolution != tempResolution:
+                bestList.append(currentBestPerRes)  #add the best that we found to the list of best
+                currentBestVBR = 0.0
+                currentBestPerRes = video.format_id #reset to current video
+                tempResolution = video.Resolution #reset to the new resolution
+
+            if tempResolution == video.Resolution:
+                if video.VideoBitrate > currentBestVBR:
+                    currentBestPerRes = video.format_id
+                    currentBestVBR = video.VideoBitrate
+
+        bestList.append(currentBestPerRes)
+
+        return bestList
+    
+    def GiveIndex(self, ID):
+        for index, video in enumerate(self.videos):
+            if video.format_id == ID:
+                return index
+            
+        return None
+        
+
 class FormatInfo:
     '''Store all the information for each format that we read in...'''
     def __init__(self, format_id):
@@ -16,7 +74,6 @@ class FormatInfo:
         self.AudioSampleRate = None
         self.Resolution = None
         self.FPS = None
-
         self.VideoBitrate = None
         self.AudioBitrate = None
         self.AudioCodec = None
@@ -24,6 +81,7 @@ class FormatInfo:
         #print(f"New Instance: {self.format_id}")
 
     def DisplayInformationFull(self):
+        '''Display all the information that a format has'''
         try:
             print(f'My ID is: {self.format_id}')
             print(f'My Resolution is: {self.Resolution}')
@@ -94,34 +152,33 @@ class AppLogic:
             formats = info_dict.get('formats', [])
 
         try:
-
-            #incoming, prepping for seperation
-            thumbnails = []
-            audios = []
-            videos = []
+            VideoTemp = VideoInfo() #new video class instance
 
             for format in formats:
-                output = [f"Format ID: {format['format_id']}"]
+                '''Go through each format received one by one'''
 
-                #instantialize the format per format in the return
-                item = FormatInfo(format_id=format['format_id'])
+                output = [f"Format ID: {format['format_id']}"] #cosmetic output
+                item = FormatInfo(format_id=format['format_id']) #instantialize per format as "item"
 
-                #add attributes to the format only if they exist
+                '''Add attributes to the format only if they exist
+                    with the exception of resolution and fps being used
+                    for "type of media" seperation '''
+                
                 if 'resolution' in format and format['resolution']:
                     output.append(f"Resolution: {format['resolution']}")
-                    item.Resolution = format['resolution'] #append to object
+                    item.Resolution = format['resolution'] #append
                     if format['resolution'] == 'audio only':
-                        audios.append(item)
+                        VideoTemp.audios.append(item)
                         #print(f"{format['format_id']} is audio")
 
                 if 'fps' in format and format['fps']:
                     output.append(f"FPS: {format['fps']}")
-                    item.FPS = format['fps'] #append to object
+                    item.FPS = format['fps'] #append
                     if format['fps'] > 0 and format['fps'] < 1:
-                        thumbnails.append(item)
+                        VideoTemp.thumbnails.append(item)
                         #print(f"{format['format_id']} is a thumbnail")
                     elif format['fps'] > 1:
-                        videos.append(item)
+                        VideoTemp.videos.append(item)
                         #print(f"{format['format_id']} is a video")
                     else:
                         pass
@@ -131,22 +188,22 @@ class AppLogic:
                 #we no longer need to check whether something is audio, video, or a thumbnail
                 if 'acodec' in format and format['acodec']:
                     output.append(f"Audio Codec: {format['acodec']}")
-                    item.AudioCodec = format['acodec'] #append to object
+                    item.AudioCodec = format['acodec'] #append
                 if 'vcodec' in format and format['vcodec']:
                     output.append(f"Video Codec: {format['vcodec']}")
-                    item.VideoCodec = format['vcodec'] #append to object
+                    item.VideoCodec = format['vcodec'] #append
                 if 'ext' in format and format['ext']:
                     output.append(f"Extension: {format['ext']}")
-                    item.Extension = format['ext'] #append to object
+                    item.Extension = format['ext'] #append
                 if 'asr' in format and format['asr']:
                     output.append(f"Audio sampling rate: {format['asr']}")
-                    item.AudioSampleRate = format['asr'] #append to object
+                    item.AudioSampleRate = format['asr'] #append
                 if 'abr' in format and format['abr']:
                     output.append(f"Audio Bitrate: {format['abr']}")
-                    item.AudioBitrate = format['abr'] #append to object
+                    item.AudioBitrate = format['abr'] #append
                 if 'vbr' in format and format['vbr']:
                     output.append(f"Video Bitrate: {format['vbr']}")
-                    item.VideoBitrate = format['vbr'] #append to object
+                    item.VideoBitrate = format['vbr'] #append
                 #print(", ".join(output))
 
             ''' PRINTING OUT INFORMATION'''
@@ -171,9 +228,24 @@ class AppLogic:
             #     video.DisplayInformationFull()
             #     print('Next')
 
-            '''FIRST JOB IS TO GRAB RESOLUTIONS AND TELL ME THEIR ID's'''
-            for video in videos:
-                print(video.format_id, video.Resolution)
+            '''Test: Does the VideoInfo class successfuly store info? Prove by saying how many'''
+            #print(VideoTemp.TotalFormats())
+
+            '''Task 1: (Videos) Tell me their ID's and Resolution'''
+            #VideoTemp.ListVideos()
+
+            '''Task 2: (Audios) Tell me their ID's and Bitrate'''
+            #VideoTemp.ListAudios()
+
+            '''Task 3: (Thumbnail) Tell me their ID's and Resolution'''
+            #VideoTemp.ListThumbnails()
+
+            '''Task 4: List the only the best videos per resolution, based off bitrate'''
+            #print(VideoTemp.ListBestVideos())
+
+            '''Task 5: Look up method'''
+            print(VideoTemp.GiveIndex('311'))
+            print(VideoTemp.videos[5].format_id)
 
         except Exception as e:
             print(f"Error: {e}")
