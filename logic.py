@@ -12,17 +12,30 @@ class FormatInfo:
         self.Extension = None
         self.Channels = None
         self.FileSize = None
-        self.BitRate = None
         self.Protocol = None
-        self.Codec = None
         self.AudioSampleRate = None
         self.Resolution = None
         self.FPS = None
-        print(f"New Instance: {self.format_id}")
 
-    def DisplayInformation(self):
-        print(f'My ID is: {self.format_id}')
-        print(f'My Resolution is: {self.Resolution}')
+        self.VideoBitrate = None
+        self.AudioBitrate = None
+        self.AudioCodec = None
+        self.VideoCodec = None
+        #print(f"New Instance: {self.format_id}")
+
+    def DisplayInformationFull(self):
+        try:
+            print(f'My ID is: {self.format_id}')
+            print(f'My Resolution is: {self.Resolution}')
+            print(f'My FPS is: {self.FPS}')
+            print(f'My Audio Codec is: {self.AudioCodec}')
+            print(f'My Video Codec is: {self.VideoCodec}')
+            print(f'My Extension is: {self.Extension}')
+            print(f'My Audio Sample Rate is: {self.AudioSampleRate}')
+            print(f'My Audio Bitrate is: {self.AudioBitrate}')
+            print(f'My Video Bitrate is: {self.VideoBitrate}')
+        except Exception as e:
+            print(f"Skip")
 
 class AppLogic:
     def __init__(self):
@@ -87,56 +100,80 @@ class AppLogic:
             audios = []
             videos = []
 
-            for f in formats:
-                output = [f"Format ID: {f['format_id']}"]
+            for format in formats:
+                output = [f"Format ID: {format['format_id']}"]
 
-                #create format
-                format_info = FormatInfo(format_id=f['format_id'])
+                #instantialize the format per format in the return
+                item = FormatInfo(format_id=format['format_id'])
 
-                #add attributes only if they exist
-                if 'resolution' in f and f['resolution']:
-                    output.append(f"Resolution: {f['resolution']}")
-                    format_info.Resolution = f['resolution'] #append to object
-                    if f['resolution'] == 'audio only':
-                        audios.append(format_info)
-                        print(f"{f['format_id']} is audio")
+                #add attributes to the format only if they exist
+                if 'resolution' in format and format['resolution']:
+                    output.append(f"Resolution: {format['resolution']}")
+                    item.Resolution = format['resolution'] #append to object
+                    if format['resolution'] == 'audio only':
+                        audios.append(item)
+                        #print(f"{format['format_id']} is audio")
 
-                if 'fps' in f and f['fps']:
-                    output.append(f"FPS: {f['fps']}")
-                    format_info.FPS = f['fps'] #append to object
-                    if f['fps'] > 0 and f['fps'] < 1:
-                        thumbnails.append(format_info)
-                        print(f"{f['format_id']} is a thumbnail")
-                    elif f['fps'] > 1:
-                        videos.append(format_info)
-                        print(f"{f['format_id']} is a video")
+                if 'fps' in format and format['fps']:
+                    output.append(f"FPS: {format['fps']}")
+                    item.FPS = format['fps'] #append to object
+                    if format['fps'] > 0 and format['fps'] < 1:
+                        thumbnails.append(item)
+                        #print(f"{format['format_id']} is a thumbnail")
+                    elif format['fps'] > 1:
+                        videos.append(item)
+                        #print(f"{format['format_id']} is a video")
                     else:
+                        pass
                         #actually redudant but leave as is.
-                        print('This is audio')
+                        #print('This is audio')
 
-                # if 'acodec' in f and f['acodec']:
-                #     output.append(f"Audio Codec: {f['acodec']}")
-                # if 'vcodec' in f and f['vcodec']:
-                #     output.append(f"Video Codec: {f['vcodec']}")
-                # if 'ext' in f and f['ext']:
-                #     output.append(f"Extension: {f['ext']}")
-                # if 'asr' in f and f['asr']:
-                #     output.append(f"Audio sampling rate: {f['asr']}")
-                # if 'abr' in f and f['abr']:
-                #     output.append(f"Audio Bitrate: {f['abr']}")
-                # if 'vbr' in f and f['vbr']:
-                #     output.append(f"Video Bitrate: {f['vbr']}")
-                print(", ".join(output))
+                #we no longer need to check whether something is audio, video, or a thumbnail
+                if 'acodec' in format and format['acodec']:
+                    output.append(f"Audio Codec: {format['acodec']}")
+                    item.AudioCodec = format['acodec'] #append to object
+                if 'vcodec' in format and format['vcodec']:
+                    output.append(f"Video Codec: {format['vcodec']}")
+                    item.VideoCodec = format['vcodec'] #append to object
+                if 'ext' in format and format['ext']:
+                    output.append(f"Extension: {format['ext']}")
+                    item.Extension = format['ext'] #append to object
+                if 'asr' in format and format['asr']:
+                    output.append(f"Audio sampling rate: {format['asr']}")
+                    item.AudioSampleRate = format['asr'] #append to object
+                if 'abr' in format and format['abr']:
+                    output.append(f"Audio Bitrate: {format['abr']}")
+                    item.AudioBitrate = format['abr'] #append to object
+                if 'vbr' in format and format['vbr']:
+                    output.append(f"Video Bitrate: {format['vbr']}")
+                    item.VideoBitrate = format['vbr'] #append to object
+                #print(", ".join(output))
 
-            print("Printing POST information")
-            print("Thumbnails:", [t.format_id for t in thumbnails])
-            print("Audios:", [a.format_id for a in audios])
-            print("Videos:", [v.format_id for v in videos])
+            ''' PRINTING OUT INFORMATION'''
 
-            print("Object Printing")
+            # print("Printing POST information")
+            # print("Thumbnails:", [t.format_id for t in thumbnails])
+            # print("Audios:", [a.format_id for a in audios])
+            # print("Videos:", [v.format_id for v in videos])
+
+            # print("Object Printing: Thumbnails")
+            # for thumbnail in thumbnails:
+            #     thumbnail.DisplayInformationFull()
+            #     print('Next')
+
+            # print("Object Printing: Audio")
+            # for audio in audios:
+            #     audio.DisplayInformationFull()
+            #     print('Next')
+
+            # print("Object Printing: Video")
+            # for video in videos:
+            #     video.DisplayInformationFull()
+            #     print('Next')
+
+            '''FIRST JOB IS TO GRAB RESOLUTIONS AND TELL ME THEIR ID's'''
             for video in videos:
-                if video.format_id == '269':
-                    video.DisplayInformation()
+                print(video.format_id, video.Resolution)
 
         except Exception as e:
             print(f"Error: {e}")
