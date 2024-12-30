@@ -5,13 +5,12 @@ import yt_dlp as yt
 import json
 
 class VideoInfo:
-    #seperation of formats
-    thumbnails = []
-    audios = []
-    videos = []
-
+    '''Store all information of formats for A GIVEN VIDEO'''
     def __init__(self):
-        pass
+        #seperation of formats
+        self.thumbnails = []
+        self.audios = []
+        self.videos = []
 
     def TotalFormats(self):
         return (len(self.thumbnails) + len(self.audios) + len(self.videos))
@@ -62,11 +61,10 @@ class VideoInfo:
         for index, thumbnail in enumerate(self.thumbnails):
             if thumbnail.format_id == ID:
                 return index
-        return None
-        
+        return None  
 
 class FormatInfo:
-    '''Store all the information for each format that we read in...'''
+    '''Store all the information for EACH FORMAT that we read in...'''
     def __init__(self, format_id):
         self.format_id = format_id
         self.TypeOfMedia = None
@@ -99,6 +97,7 @@ class FormatInfo:
             print(f"Skip")
 
 class AppLogic:
+    '''The information for a given session'''
     def __init__(self):
         self.url_entry = None
         self.auto_convert = False
@@ -106,10 +105,20 @@ class AppLogic:
         self.video = True
         self.convert_dropdown_choice = "MP4"
 
+        #startup
+        print("Starting new App instance")
+        self.VideoTemp = VideoInfo()
+
     def url_entry_box_button(self):
         if self.url_entry:
             entered_url = self.url_entry.get()  #get value via GET
-            print(f"URL entered: {entered_url}")
+            self.url_entry = entered_url #to make sure that we saved it
+            print(f"THIS IS MY URL ENTRY SAVED: {self.url_entry}")
+            print(f"Looking up stats for: {entered_url}")
+            self.YouTubeBasicLookup()
+            print("Lookup successful")
+            print("Move choices to our dropdown")
+            self.videoChoices_dropdown_options()
         else:
             print("Error: URL entry box not set.")
 
@@ -141,27 +150,37 @@ class AppLogic:
         return ["mp3_bad", "mp3_alright", "mp3_good", "mp3_best"] 
     
     def videoChoices_dropdown_options(self):
-        return ["240p", "720p", "1080p", "1440p", "2560p"]
-    
-    if __name__ == '__main__':
-        #dont forget to santizie just in case
-        #yt.YoutubeDL.sanitize_info
-        #https://github.com/yt-dlp/yt-dlp#usage-and-options
+        if self.VideoTemp.videos == None or len(self.VideoTemp.videos) == 0:
+            return "None"
+        else:
+            print("This is what I have in my videos")
+            self.VideoTemp.ListVideos()
+            print("Dropdown - Videos")
+            print(f'This: {self.VideoTemp.videos}')
+            '''WHY WONT IT DISPLAY THE NEW LIST OF VIDEOS TO THE DROP DOWN?'''
+            return self.VideoTemp.videos
+        
+    def YouTubeBasicLookup(self):
+        '''The main-stay operation'''
 
+        #CLI commands
         ydl_opts = {
             'quiet': True,
             'listformats': False,
         }
 
-        video_url = "https://youtu.be/qbIooWQfwU0?si=XKZlqxtFGwstnaxC"
+        #URL entry
+        if self.url_entry == None:
+            video_url = "https://youtu.be/qbIooWQfwU0?si=XKZlqxtFGwstnaxC"
+        else:
+            video_url = self.url_entry
 
+        #go and grab the logic
         with yt.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(video_url, download=False)
             formats = info_dict.get('formats', [])
 
         try:
-            VideoTemp = VideoInfo() #new video class instance
-
             for format in formats:
                 '''Go through each format received one by one'''
 
@@ -176,17 +195,17 @@ class AppLogic:
                     output.append(f"Resolution: {format['resolution']}")
                     item.Resolution = format['resolution'] #append
                     if format['resolution'] == 'audio only':
-                        VideoTemp.audios.append(item)
+                        self.VideoTemp.audios.append(item)
                         #print(f"{format['format_id']} is audio")
 
                 if 'fps' in format and format['fps']:
                     output.append(f"FPS: {format['fps']}")
                     item.FPS = format['fps'] #append
                     if format['fps'] > 0 and format['fps'] < 1:
-                        VideoTemp.thumbnails.append(item)
+                        self.VideoTemp.thumbnails.append(item)
                         #print(f"{format['format_id']} is a thumbnail")
                     elif format['fps'] > 1:
-                        VideoTemp.videos.append(item)
+                        self.VideoTemp.videos.append(item)
                         #print(f"{format['format_id']} is a video")
                     else:
                         pass
@@ -212,7 +231,7 @@ class AppLogic:
                 if 'vbr' in format and format['vbr']:
                     output.append(f"Video Bitrate: {format['vbr']}")
                     item.VideoBitrate = format['vbr'] #append
-                #print(", ".join(output))
+                print(", ".join(output))
 
             ''' PRINTING OUT INFORMATION'''
 
@@ -256,11 +275,12 @@ class AppLogic:
             # print(VideoTemp.videos[5].format_id)
 
             '''Task 6: Apply the information to our GUI endpoint'''
-
-
         except Exception as e:
             print(f"Error: {e}")
 
-
+    if __name__ == '__main__':
+        #dont forget to santizie just in case
+        #yt.YoutubeDL.sanitize_info
+        #https://github.com/yt-dlp/yt-dlp#usage-and-options
 
         '''TEST LATER --remux-video FORMAT'''
