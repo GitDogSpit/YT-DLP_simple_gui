@@ -124,6 +124,7 @@ class AppGUI:
 
 
         #The enter URL text box
+        '''GO ALL THE WAY DOWN AND CHECK THE ENTRIES'''
         button_image_4 = tk.PhotoImage(file=relative_to_assets("button_4.png"))
         URL_enter = tk.Button(image=button_image_4, borderwidth=0, highlightthickness=0, command=self.logic_handler.url_entry_box_button, relief="flat",)
         URL_enter.place(x=503.0, y=7.0, width=64.0, height=40.0)
@@ -162,5 +163,8 @@ class AppGUI:
         #Bottom line i think
         image_image_8 = tk.PhotoImage(file=relative_to_assets("image_8.png"))
         image_8 = canvas.create_image(423.0, 61.0, image=image_image_8)
+
+        '''ENTRIES'''
+        self.logic_handler.url_entry = entry_1
 
         self.root.mainloop()

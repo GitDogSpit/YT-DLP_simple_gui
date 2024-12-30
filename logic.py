@@ -49,16 +49,19 @@ class VideoInfo:
                 if video.VideoBitrate > currentBestVBR:
                     currentBestPerRes = video.format_id
                     currentBestVBR = video.VideoBitrate
-
         bestList.append(currentBestPerRes)
-
         return bestList
     
     def GiveIndex(self, ID):
         for index, video in enumerate(self.videos):
             if video.format_id == ID:
                 return index
-            
+        for index, audio in enumerate(self.audios):
+            if audio.format_id == ID:
+                return index
+        for index, thumbnail in enumerate(self.thumbnails):
+            if thumbnail.format_id == ID:
+                return index
         return None
         
 
@@ -97,10 +100,18 @@ class FormatInfo:
 
 class AppLogic:
     def __init__(self):
+        self.url_entry = None
         self.auto_convert = False
         self.audio = True
         self.video = True
         self.convert_dropdown_choice = "MP4"
+
+    def url_entry_box_button(self):
+        if self.url_entry:
+            entered_url = self.url_entry.get()  #get value via GET
+            print(f"URL entered: {entered_url}")
+        else:
+            print("Error: URL entry box not set.")
 
     def toggle_auto_convert(self):
         #to reference this in commands do: command=self.logic_handler.toggle_auto_convert
@@ -116,9 +127,6 @@ class AppLogic:
         #to reference this in commands do: command=self.logic_handler.toggle_video
         self.video = not self.video
         print(f"Video toggled: {self.video}")
-
-    def url_entry_box_button(self):
-        print("URL entered: sample")
 
     def download_button(self):
         print("Download button clicked")
@@ -244,8 +252,11 @@ class AppLogic:
             #print(VideoTemp.ListBestVideos())
 
             '''Task 5: Look up method'''
-            print(VideoTemp.GiveIndex('311'))
-            print(VideoTemp.videos[5].format_id)
+            # print(VideoTemp.GiveIndex('311'))
+            # print(VideoTemp.videos[5].format_id)
+
+            '''Task 6: Apply the information to our GUI endpoint'''
+
 
         except Exception as e:
             print(f"Error: {e}")
